@@ -8,13 +8,22 @@ function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
 
   useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
+    const subscription = client.models.Todo.observeQuery().subscribe({
       next: (data) => setTodos([...data.items]),
     });
+
+    return () => subscription.unsubscribe(); // Clean up subscription on unmount
   }, []);
 
   function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
+    const content = window.prompt("Todo content");
+    if (content) {
+      client.models.Todo.create({ content })
+        .catch((error) => {
+          console.error("Error creating todo:", error);
+          alert("Failed to create todo. Please try again.");
+        });
+    }
   }
 
   return (
@@ -27,11 +36,7 @@ function App() {
         ))}
       </ul>
       <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
+        🥳 App successfully hosted. Try creating a new todo!
       </div>
     </main>
   );
